@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.demo.controllers.dtos.ContactRecordDto;
+import com.example.demo.controllers.dtos.ContactResponseDto;
 import com.example.demo.models.ContactModel;
 import com.example.demo.repositories.ContactRepository;
 
@@ -39,7 +40,7 @@ public class ContactController {
 	}
 	
 	@GetMapping("/contacts")
-	public ResponseEntity<List<ContactModel>> getAllContacts(@RequestParam(required = false, defaultValue = "asc") String order,
+	public ResponseEntity<ContactResponseDto> getAllContacts(@RequestParam(required = false, defaultValue = "asc") String order,
 															@RequestParam(required = false) String nacionality){
 		
 		Sort.Direction direction = Sort.Direction.fromString(order);
@@ -53,18 +54,30 @@ public class ContactController {
 			contacts = contactRepository.findAll(sort);
 		}
 		
-		return ResponseEntity.status(HttpStatus.OK).body(contacts);
+		ContactResponseDto response = new ContactResponseDto();
+		
+		if (contacts.size() >= 1) {
+			response.setContacts(contacts);
+		} else {
+			response.setMessage("There are no values for these params.");
+		}
+		
+		return ResponseEntity.status(HttpStatus.OK).body(response);
 	}
 	
 	@GetMapping("/contacts/{id}")
-	public ResponseEntity<Object> getOneContact(@PathVariable(value = "id") UUID id){
+	public ResponseEntity<ContactResponseDto> getOneContact(@PathVariable(value = "id") UUID id){
 		Optional<ContactModel> contact = contactRepository.findById(id);
 		
+		ContactResponseDto response = new ContactResponseDto();
+		
 		if (contact.isEmpty()) {
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Contact not found.");
+			response.setMessage("Contact not found.");
+		} else {
+			response.setContact(contact.get());
 		}
 		
-		return ResponseEntity.status(HttpStatus.OK).body(contact.get());
+		return ResponseEntity.status(HttpStatus.OK).body(response);
 	}
 	
 	@PutMapping("/contacts/{id}")
