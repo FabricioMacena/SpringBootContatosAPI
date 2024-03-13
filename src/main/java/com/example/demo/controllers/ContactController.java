@@ -6,6 +6,7 @@ import java.util.UUID;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -14,12 +15,14 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.demo.controllers.dtos.ContactRecordDto;
 import com.example.demo.models.ContactModel;
 import com.example.demo.repositories.ContactRepository;
 
+import io.micrometer.common.util.StringUtils;
 import jakarta.validation.Valid;
 
 @RestController
@@ -36,8 +39,21 @@ public class ContactController {
 	}
 	
 	@GetMapping("/contacts")
-	public ResponseEntity<List<ContactModel>> getAllContacts(){
-		return ResponseEntity.status(HttpStatus.OK).body(contactRepository.findAll());
+	public ResponseEntity<List<ContactModel>> getAllContacts(@RequestParam(required = false, defaultValue = "asc") String order,
+															@RequestParam(required = false) String nacionality){
+		
+		Sort.Direction direction = Sort.Direction.fromString(order);
+		Sort sort = Sort.by(direction, "name");
+	
+		List<ContactModel> contacts;
+		
+		if (!StringUtils.isBlank(nacionality)) {
+			contacts = contactRepository.findAllByNacionality(nacionality, sort);
+		} else {
+			contacts = contactRepository.findAll(sort);
+		}
+		
+		return ResponseEntity.status(HttpStatus.OK).body(contacts);
 	}
 	
 	@GetMapping("/contacts/{id}")
