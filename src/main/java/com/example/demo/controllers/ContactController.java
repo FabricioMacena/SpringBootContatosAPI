@@ -26,6 +26,9 @@ import com.example.demo.repositories.ContactRepository;
 import io.micrometer.common.util.StringUtils;
 import jakarta.validation.Valid;
 
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
+
 @RestController
 public class ContactController {
 	
@@ -56,7 +59,12 @@ public class ContactController {
 		
 		ContactResponseDto response = new ContactResponseDto();
 		
-		if (contacts.size() >= 1) {
+		if (!contacts.isEmpty()) {
+			for (ContactModel contact : contacts) {
+				UUID id = contact.getIdContact();
+				contact.add(linkTo(methodOn(ContactController.class).getOneContact(id)).withSelfRel());
+			}
+			
 			response.setContacts(contacts);
 		} else {
 			response.setMessage("There are no values for these params.");
@@ -74,6 +82,7 @@ public class ContactController {
 		if (contact.isEmpty()) {
 			response.setMessage("Contact not found.");
 		} else {
+			contact.get().add(linkTo(methodOn(ContactController.class).getAllContacts("asc", null)).withRel("Contacts Lists"));
 			response.setContact(contact.get());
 		}
 		

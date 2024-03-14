@@ -7,7 +7,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
 public class ContactResponseDto {
-	
+
 	@JsonInclude(Include.NON_NULL)
 	private List<ContactModel> contacts;
 
